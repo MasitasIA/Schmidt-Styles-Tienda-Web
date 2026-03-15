@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+@theme {
+    /* Paleta de colores */
+    --color-primary: #111111; /* casi negro */
+    --color-primary-hover: #222222; /* gris muy oscuro */
+
+    --color-secondary: #e5e5e5; /* gris claro industrial */
+    --color-secondary-hover: #ffffff; /* blanco puro */
+
+    --color-background: #000000; /* negro puro para el fondo */
+
+    --color-text: #ffffff; /* blanco para destacar en el fondo negro */
+    --color-text-hover: #ff3333; /* rojo agresivo al pasar el mouse */
+    --color-text-secondary: #888888; /* gris medio para textos menos importantes */
+    --color-text-hover-secondary: #cccccc; /* gris claro */
+
+    --color-accent: #ff0000; /* rojo puro alerta */
+
+    /* Paleta de colores (Legales) */
+    --color-legal: #fff; /* Blanco para legales */
+    --color-legal-text: #000000; /* negro para texto en elementos legales */
+
+    /* Bordes */
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 8px;
+}
