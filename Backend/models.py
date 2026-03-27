@@ -3,6 +3,9 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
 
+# Aquí se guardan las Categorías
+
+
 class Categoria(Base):
     __tablename__ = "categorias"
 
@@ -14,6 +17,9 @@ class Categoria(Base):
     def __str__(self):
         return self.nombre
 
+# Aquí se guarda el Producto
+
+
 class Producto(Base):
     __tablename__ = "productos"
 
@@ -21,7 +27,7 @@ class Producto(Base):
     nombre = Column(String(200))
     descripcion = Column(Text)
     precio = Column(Numeric(10, 2))
-    imagen = Column(String)  # guardamos la URL de Cloudinary
+    imagen = Column(String)
 
     categoria_id = Column(Integer, ForeignKey("categorias.id"))
     categoria = relationship("Categoria", back_populates="productos")
@@ -32,9 +38,10 @@ class Producto(Base):
     variantes = relationship("VarianteProducto", back_populates="producto")
     imagenes = relationship("ImagenProducto", back_populates="producto")
 
-    # Le enseña a Python a mostrar el nombre real del producto
     def __str__(self):
         return self.nombre
+
+# Aquí se guardan los Talles
 
 
 class Talle(Base):
@@ -45,9 +52,10 @@ class Talle(Base):
 
     variantes = relationship("VarianteProducto", back_populates="talle")
 
-    # Le enseña a Python a mostrar el nombre del talle (ej: "L", "44")
     def __str__(self):
         return self.nombre
+
+# Aquí se guardan los Colores de las prendas
 
 
 class Color(Base):
@@ -58,9 +66,10 @@ class Color(Base):
 
     variantes = relationship("VarianteProducto", back_populates="color")
 
-    # Le enseña a Python a mostrar el nombre del color
     def __str__(self):
         return self.nombre
+
+# Aquí se guardan los productos a mostrar, incluye talle y color
 
 
 class VarianteProducto(Base):
@@ -85,6 +94,8 @@ class VarianteProducto(Base):
         return f"{producto_nom} - {talle_nom} - {color_nom}"
 
 # Clase que se encarga de almacenar las imágenes de los productos
+
+
 class ImagenProducto(Base):
     __tablename__ = "imagenes_producto"
 
