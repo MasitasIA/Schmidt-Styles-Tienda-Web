@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, AlertTriangle } from "lucide-react";
+// IMPORTANTE: Agregamos el ícono "X" para cerrar el modal
+import { ArrowLeft, ShoppingCart, AlertTriangle, X } from "lucide-react";
 import { supabase } from "../supabase";
 
-// --- IMPORTAMOS EL CARRITO DESDE EL CONTEXTO ---
 import { useCart } from "../CartContext";
 
-// --- INTERFACES ACTUALIZADAS ---
 interface ImagenProducto {
     id: number;
     imagen: string;
@@ -54,8 +53,11 @@ export default function ProductoDetalle() {
     const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(
         null,
     );
+    const [imagenSeleccionada, setImagenSeleccionada] = useState<string>("");
 
-    // --- TRAEMOS LA FUNCIÓN PARA AGREGAR AL CARRITO ---
+    // NUEVO: Estado para abrir/cerrar la guía de talles
+    const [mostrarGuia, setMostrarGuia] = useState(false);
+
     const { addToCart } = useCart();
 
     useEffect(() => {
@@ -81,6 +83,10 @@ export default function ProductoDetalle() {
                 if (error) throw error;
 
                 setProducto(data as Producto);
+
+                if (data && data.imagenes && data.imagenes.length > 0) {
+                    setImagenSeleccionada(data.imagenes[0].imagen);
+                }
             } catch {
                 setError("Producto no encontrado o fuera de stock.");
             } finally {
@@ -111,15 +117,12 @@ export default function ProductoDetalle() {
                     className="text-accent mb-6"
                     strokeWidth={2}
                 />
-
                 <h2 className="text-4xl font-black uppercase tracking-tighter text-text mb-4">
                     Error 404
                 </h2>
-
                 <p className="text-text-secondary font-bold uppercase tracking-wide mb-8">
                     {error}
                 </p>
-
                 <Link
                     to="/catalogo"
                     className="border-4 border-text px-8 py-4 font-black uppercase tracking-widest hover:bg-text hover:text-background transition-colors shadow-[6px_6px_0px_0px_var(--color-accent)]"
@@ -132,30 +135,24 @@ export default function ProductoDetalle() {
 
     const variantesConStock =
         producto.variantes?.filter((v) => v.stock > 0) || [];
-
     const tallesDisponibles = Array.from(
         new Set(variantesConStock.map((v) => v.talles?.nombre).filter(Boolean)),
     );
-
     const coloresDisponibles = Array.from(
         new Set(
             variantesConStock.map((v) => v.colores?.nombre).filter(Boolean),
         ),
     );
 
-    // --- FUNCIÓN QUE SE EJECUTA AL TOCAR EL BOTÓN ---
     const handleAddToCart = () => {
         if (!talleSeleccionado || !colorSeleccionado) return;
 
-        // Creamos el objeto con los datos exactos que pide el CartContext
         addToCart({
-            // Generamos un ID único combinando el producto, el talle y el color
-            // Así, si agrega un "Talle M" y luego un "Talle L", son renglones distintos en el carrito
             id: `${producto.id}-${talleSeleccionado}-${colorSeleccionado}`,
             producto_id: producto.id,
             nombre: producto.nombre,
             precio: producto.precio,
-            cantidad: 1, // Por defecto siempre arranca en 1
+            cantidad: 1,
             imagen:
                 producto.imagenes && producto.imagenes.length > 0
                     ? producto.imagenes[0].imagen
@@ -165,10 +162,53 @@ export default function ProductoDetalle() {
         });
     };
 
+    // NUEVO: Función para determinar qué imagen mostrar según la categoría
+    const renderImagenGuia = () => {
+        const nombreCategoria =
+            producto.categorias?.nombre?.toLowerCase() || "";
+
+        // Comprobamos si la categoría contiene la palabra "baggy" o "pantalón"
+        if (
+            nombreCategoria.includes("baggy") ||
+            nombreCategoria.includes("pantalon") ||
+            nombreCategoria.includes("pantalón")
+        ) {
+            return (
+                <img
+                    src="/guia-baggy.png"
+                    alt="Guía Pantalones Baggy"
+                    className="w-full border-2 border-text mb-6"
+                />
+            );
+        }
+        // Comprobamos si es remera
+        else if (
+            nombreCategoria.includes("remera") ||
+            nombreCategoria.includes("t-shirt")
+        ) {
+            return (
+                <img
+                    src="/guia-remera.png"
+                    alt="Guía Remeras"
+                    className="w-full border-2 border-text mb-6"
+                />
+            );
+        }
+        // Imagen por defecto si es otra categoría
+        else {
+            return (
+                <img
+                    src="/guia-general.png"
+                    alt="Guía General"
+                    className="w-full border-2 border-text mb-6"
+                />
+            );
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-background text-text selection:bg-accent selection:text-text py-12">
+        <div className="min-h-screen bg-background text-text selection:bg-accent selection:text-text py-12 relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Botón Volver */}
                 <Link
                     to="/catalogo"
                     className="inline-flex items-center gap-2 font-black uppercase tracking-widest text-text-secondary hover:text-accent transition-colors mb-10 group"
@@ -182,13 +222,12 @@ export default function ProductoDetalle() {
                 </Link>
 
                 <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-                    {/* LADO IZQUIERDO */}
-                    <div className="w-full lg:w-1/2">
+                    {/* LADO IZQUIERDO: Imágenes */}
+                    <div className="w-full lg:w-1/2 flex flex-col gap-4">
                         <div className="aspect-4/5 border-4 border-text bg-primary relative shadow-[12px_12px_0px_0px_var(--color-text)] overflow-hidden group">
-                            {producto.imagenes &&
-                            producto.imagenes.length > 0 ? (
+                            {imagenSeleccionada ? (
                                 <img
-                                    src={producto.imagenes[0].imagen}
+                                    src={imagenSeleccionada}
                                     alt={producto.nombre}
                                     className="w-full h-full object-cover grayscale-20 group-hover:grayscale-0 transition-all duration-500"
                                 />
@@ -199,14 +238,38 @@ export default function ProductoDetalle() {
                             )}
 
                             {producto.categorias && (
-                                <div className="absolute top-6 left-6 bg-background text-text border-2 border-text font-black uppercase tracking-widest px-4 py-2 text-sm shadow-[4px_4px_0px_0px_var(--color-accent)]">
+                                <div className="absolute top-6 left-6 bg-background text-text border-2 border-text font-black uppercase tracking-widest px-4 py-2 text-sm shadow-[4px_4px_0px_0px_var(--color-accent)] pointer-events-none">
                                     {producto.categorias.nombre}
                                 </div>
                             )}
                         </div>
+
+                        {producto.imagenes && producto.imagenes.length > 1 && (
+                            <div className="flex gap-4 overflow-x-auto pb-2">
+                                {producto.imagenes.map((imgObj) => (
+                                    <button
+                                        key={imgObj.id}
+                                        onClick={() =>
+                                            setImagenSeleccionada(imgObj.imagen)
+                                        }
+                                        className={`shrink-0 w-24 h-24 border-4 overflow-hidden transition-all ${
+                                            imagenSeleccionada === imgObj.imagen
+                                                ? "border-accent shadow-[4px_4px_0px_0px_var(--color-accent)] transform -translate-y-1"
+                                                : "border-text hover:border-accent"
+                                        }`}
+                                    >
+                                        <img
+                                            src={imgObj.imagen}
+                                            alt={`Vista ${imgObj.id}`}
+                                            className="w-full h-full object-cover grayscale-50 hover:grayscale-0 transition-all"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
-                    {/* LADO DERECHO */}
+                    {/* LADO DERECHO: Info */}
                     <div className="w-full lg:w-1/2 flex flex-col pt-4">
                         <h1 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-4 leading-none">
                             {producto.nombre}
@@ -224,12 +287,23 @@ export default function ProductoDetalle() {
 
                         {/* TALLES */}
                         <div className="mb-8">
-                            <h3 className="font-black uppercase tracking-widest text-sm mb-4">
-                                Selecciona tu talle:
-                                <span className="text-accent ml-2">
-                                    {talleSeleccionado || "[ Requerido ]"}
-                                </span>
-                            </h3>
+                            {/* NUEVO: Contenedor con el título de talles y el botón de la guía juntos */}
+                            <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+                                <h3 className="font-black uppercase tracking-widest text-sm">
+                                    Selecciona tu talle:
+                                    <span className="text-accent ml-2">
+                                        {talleSeleccionado || "[ Requerido ]"}
+                                    </span>
+                                </h3>
+
+                                {/* Botón para abrir modal */}
+                                <button
+                                    onClick={() => setMostrarGuia(true)}
+                                    className="text-text hover:text-accent font-black text-xs uppercase underline tracking-widest flex items-center gap-1 transition-colors"
+                                >
+                                    📏 Ver Guía de Talles
+                                </button>
+                            </div>
 
                             <div className="flex flex-wrap gap-3">
                                 {tallesDisponibles.length > 0 ? (
@@ -290,14 +364,14 @@ export default function ProductoDetalle() {
                             </div>
                         </div>
 
-                        {/* BOTÓN CONECTADO AL CONTEXTO */}
+                        {/* BOTÓN AÑADIR AL CARRITO */}
                         <button
                             disabled={
                                 !talleSeleccionado ||
                                 !colorSeleccionado ||
                                 tallesDisponibles.length === 0
                             }
-                            onClick={handleAddToCart} // <-- EJECUTA LA FUNCIÓN
+                            onClick={handleAddToCart}
                             className={`mt-auto w-full flex items-center justify-center gap-4 py-6 border-4 border-text font-black uppercase tracking-widest text-xl transition-all ${
                                 !talleSeleccionado ||
                                 !colorSeleccionado ||
@@ -307,7 +381,6 @@ export default function ProductoDetalle() {
                             }`}
                         >
                             <ShoppingCart size={28} strokeWidth={3} />
-
                             {!talleSeleccionado || !colorSeleccionado
                                 ? "Selecciona Talle y Color"
                                 : "Añadir al arsenal"}
@@ -315,6 +388,65 @@ export default function ProductoDetalle() {
                     </div>
                 </div>
             </div>
+
+            {/* NUEVO: MODAL DE GUÍA DE TALLES */}
+            {mostrarGuia && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-background border-4 border-text p-6 md:p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-[16px_16px_0px_0px_var(--color-text)]">
+                        {/* Botón para cerrar */}
+                        <button
+                            onClick={() => setMostrarGuia(false)}
+                            className="absolute top-4 right-4 text-text hover:text-accent transition-colors bg-background border-2 border-text p-1"
+                        >
+                            <X size={28} strokeWidth={3} />
+                        </button>
+
+                        <h2 className="text-3xl font-black uppercase tracking-tighter mb-6 border-b-4 border-text pb-4">
+                            Guía de Talles: {producto.categorias?.nombre}
+                        </h2>
+
+                        {/* Carga la imagen correspondiente */}
+                        {renderImagenGuia()}
+
+                        {/* Explicación general */}
+                        <div className="bg-primary p-6 border-4 border-text">
+                            <h3 className="font-black uppercase tracking-widest text-lg mb-4">
+                                ¿Cómo medirte? 📏
+                            </h3>
+                            <p className="text-text-secondary font-bold mb-4 leading-relaxed">
+                                Busca tu prenda favorita (esa que te queda
+                                increíble), ponela sobre una mesa bien estirada
+                                y usa una cinta métrica o regla:
+                            </p>
+                            <ul className="list-disc list-inside space-y-2 text-text font-semibold">
+                                <li>
+                                    <span className="font-black uppercase text-accent">
+                                        Ancho:
+                                    </span>{" "}
+                                    Medí de lado a lado (axila a axila en
+                                    remeras, o de costura a costura en la
+                                    cintura de pantalones).
+                                </li>
+                                <li>
+                                    <span className="font-black uppercase text-accent">
+                                        Largo:
+                                    </span>{" "}
+                                    Medí desde el borde más alto (cuello o
+                                    cintura) hasta el final de la prenda.
+                                </li>
+                            </ul>
+
+                            <div className="mt-6 pt-4 border-t-2 border-text/20">
+                                <p className="text-sm font-black uppercase tracking-wider text-text">
+                                    <span className="text-accent">💡 Tip:</span>{" "}
+                                    Nuestras prendas son corte Unisex. Para un
+                                    fit oversize extremo, subí un talle.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

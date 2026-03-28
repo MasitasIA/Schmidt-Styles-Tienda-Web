@@ -22,8 +22,8 @@ app = FastAPI(
     description="Panel interno para la gestión de inventario, talles y colores.",
     version="1.0.0",
     contact={
-        "name": "Soporte Schmidt Styles",
-        "email": "tu_correo@gmail.com",
+        "name": "Soporte Schmidt Styles - MasitasIA",
+        "email": "nereoschmidt@gmail.com",
     },
     # Esto oculta los "schemas" de abajo para que quede más limpio
     swagger_ui_parameters={"defaultModelsExpandDepth": -1}
