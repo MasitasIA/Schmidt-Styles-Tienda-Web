@@ -5,6 +5,7 @@ import { ArrowLeft, ShoppingCart, AlertTriangle, X } from "lucide-react";
 import { supabase } from "../supabase";
 
 import { useCart } from "../CartContext";
+import BotonFavorito from "../components/ui/BotonFavorito"; // <-- Importamos el botón
 
 interface ImagenProducto {
     id: number;
@@ -225,6 +226,9 @@ export default function ProductoDetalle() {
                     {/* LADO IZQUIERDO: Imágenes */}
                     <div className="w-full lg:w-1/2 flex flex-col gap-4">
                         <div className="aspect-4/5 border-4 border-text bg-primary relative shadow-[12px_12px_0px_0px_var(--color-text)] overflow-hidden group">
+                            {/* BOTÓN DE FAVORITOS INYECTADO AQUÍ */}
+                            <BotonFavorito productoId={producto.id} />
+
                             {imagenSeleccionada ? (
                                 <img
                                     src={imagenSeleccionada}
@@ -287,7 +291,7 @@ export default function ProductoDetalle() {
 
                         {/* TALLES */}
                         <div className="mb-8">
-                            {/* NUEVO: Contenedor con el título de talles y el botón de la guía juntos */}
+                            {/* Contenedor con el título de talles y el botón de la guía juntos */}
                             <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
                                 <h3 className="font-black uppercase tracking-widest text-sm">
                                     Selecciona tu talle:
@@ -389,7 +393,7 @@ export default function ProductoDetalle() {
                 </div>
             </div>
 
-            {/* NUEVO: MODAL DE GUÍA DE TALLES */}
+            {/* MODAL DE GUÍA DE TALLES */}
             {mostrarGuia && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="bg-background border-4 border-text p-6 md:p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-[16px_16px_0px_0px_var(--color-text)]">

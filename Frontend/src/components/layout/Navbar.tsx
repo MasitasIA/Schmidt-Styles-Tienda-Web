@@ -1,17 +1,26 @@
 // Iconos
-import { Search, ShoppingCart, User, LogOut, X, Menu } from "lucide-react";
+import {
+    Search,
+    ShoppingCart,
+    User,
+    LogOut,
+    X,
+    Menu,
+    Heart,
+} from "lucide-react";
 
 // Enlaces y navegación
 import { Link, useNavigate } from "react-router-dom";
 
 // Componentes
 import LoginModal from "../modals/LoginModal";
-import CartModal from "../modals/CartModal"; // <-- Corregido: ya no importamos CartItem de acá
+import CartModal from "../modals/CartModal";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
-// --- IMPORTAMOS EL CARRITO GLOBAL ---
+// --- IMPORTAMOS LOS CONTEXTOS ---
 import { useCart } from "../../CartContext";
+import { AuthContext } from "../../AuthContext";
 
 // --- IMPORTAMOS SUPABASE PARA LAS CATEGORÍAS ---
 import { supabase } from "../../supabase";
@@ -20,11 +29,6 @@ import { supabase } from "../../supabase";
 interface NavigationLink {
     nombre: string;
     href: string;
-}
-
-interface UserData {
-    nombre: string;
-    email: string;
 }
 
 // --- INTERFAZ PARA CATEGORÍAS ---
@@ -36,8 +40,8 @@ interface Categoria {
 export default function Navbar() {
     const navigate = useNavigate();
 
+    // Estado del modal de login
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [user, setUser] = useState<UserData | null>(null);
 
     // Estados para la vista móvil
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -50,8 +54,9 @@ export default function Navbar() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
 
-    // --- TRAEMOS LOS DATOS DEL CARRITO DESDE LA NUBE ---
+    // --- DATOS GLOBALES ---
     const { cartItems, setIsCartOpen } = useCart();
+    const { isAuthenticated, logout } = useContext(AuthContext);
 
     // --- OBTENER CATEGORÍAS AL CARGAR EL NAVBAR ---
     useEffect(() => {
@@ -74,15 +79,6 @@ export default function Navbar() {
         { nombre: "Contacto", href: "/contacto" },
     ];
 
-    const handleGoogleLogin = () => {
-        setUser({ nombre: "Nereo", email: "nereo@ejemplo.com" });
-        setIsModalOpen(false);
-    };
-
-    const handleLogout = () => {
-        setUser(null);
-    };
-
     // Funciones para alternar menú y buscador en móvil
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -94,7 +90,7 @@ export default function Navbar() {
         if (isMobileMenuOpen) setIsMobileMenuOpen(false);
     };
 
-    // --- FUNCIÓN QUE EJECUTA LA BÚSQUEDA MODIFICADA ---
+    // --- FUNCIÓN DE BÚSQUEDA ---
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         const params = new URLSearchParams();
@@ -110,7 +106,16 @@ export default function Navbar() {
         }
 
         setIsMobileSearchOpen(false);
-        setSearchQuery(""); // Limpiamos el texto después de buscar (opcional)
+        setSearchQuery("");
+    };
+
+    // --- LÓGICA DEL BOTÓN DE FAVORITOS ---
+    const handleHeartClick = () => {
+        if (isAuthenticated) {
+            navigate("/favoritos");
+        } else {
+            setIsModalOpen(true);
+        }
     };
 
     return (
@@ -169,7 +174,7 @@ export default function Navbar() {
                                 {categorias.map((cat) => (
                                     <option
                                         key={cat.id}
-                                        value={cat.id}
+                                        value={cat.id.toString()}
                                         className="bg-background text-text font-black"
                                     >
                                         {cat.nombre}
@@ -196,7 +201,7 @@ export default function Navbar() {
 
                     {/* Iconos Derecha */}
                     <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-text">
-                        {/* --- LUPA PARA MÓVILES --- */}
+                        {/* Lupa para móviles */}
                         <button
                             type="button"
                             onClick={toggleMobileSearch}
@@ -205,15 +210,25 @@ export default function Navbar() {
                             <Search size={28} strokeWidth={2.5} />
                         </button>
 
-                        {/* --- LÓGICA CONDICIONAL DEL USUARIO --- */}
-                        {user ? (
+                        {/* --- FAVORITOS (CORAZÓN) --- */}
+                        <button
+                            type="button"
+                            onClick={handleHeartClick}
+                            className="flex items-center gap-2 hover:text-accent transition-colors"
+                            title="Mis Favoritos"
+                        >
+                            <Heart size={28} strokeWidth={2.5} />
+                        </button>
+
+                        {/* --- LÓGICA CONDICIONAL DEL USUARIO (CONTEXTO) --- */}
+                        {isAuthenticated ? (
                             <div className="flex items-center gap-3">
                                 <span className="text-sm font-black uppercase hidden sm:block text-accent border-2 border-accent px-2 py-1 shadow-[2px_2px_0px_0px_var(--color-text)]">
-                                    {user.nombre}
+                                    MI CUENTA
                                 </span>
                                 <button
                                     type="button"
-                                    onClick={handleLogout}
+                                    onClick={logout}
                                     title="Cerrar sesión"
                                     className="text-text hover:text-red-500 transition-colors"
                                 >
@@ -256,7 +271,7 @@ export default function Navbar() {
                     </div>
                 </div>
 
-                {/* --- BUSCADOR MÓVIL MODIFICADO (Desplegable) --- */}
+                {/* Buscador móvil desplegable */}
                 {isMobileSearchOpen && (
                     <div className="md:hidden px-4 pb-4 animate-in slide-in-from-top-2 bg-background flex gap-2 items-center">
                         <form
@@ -279,7 +294,7 @@ export default function Navbar() {
                                 {categorias.map((cat) => (
                                     <option
                                         key={cat.id}
-                                        value={cat.id}
+                                        value={cat.id.toString()}
                                         className="bg-background text-text font-black"
                                     >
                                         {cat.nombre}
@@ -314,7 +329,7 @@ export default function Navbar() {
                     </div>
                 )}
 
-                {/* --- MENÚ MÓVIL (Desplegable) --- */}
+                {/* Menú móvil desplegable */}
                 {isMobileMenuOpen && (
                     <div className="md:hidden border-t-4 border-text bg-background animate-in slide-in-from-top-2">
                         <nav className="container mx-auto px-4 py-4">
@@ -358,14 +373,12 @@ export default function Navbar() {
                 </div>
             </header>
 
-            {/* Renderiza el modal de login */}
-            <LoginModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onLogin={handleGoogleLogin}
-            />
+            {/* Modal de login */}
+            {isModalOpen && (
+                <LoginModal onClose={() => setIsModalOpen(false)} />
+            )}
 
-            {/* Renderiza el modal del carrito sin pasarle props */}
+            {/* Modal del carrito */}
             <CartModal />
         </>
     );

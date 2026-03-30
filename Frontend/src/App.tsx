@@ -14,6 +14,7 @@ import ProductoDetalle from "./views/ProductoDetalle";
 import ComoComprar from "./views/ComoComprar";
 import PreguntasFrecuentes from "./views/PreguntasFrecuentes";
 import Contacto from "./views/Contacto";
+import Favoritos from "./views/Favoritos";
 
 export default function App() {
     return (
@@ -43,6 +44,7 @@ export default function App() {
                             element={<PreguntasFrecuentes />}
                         />
                         <Route path="/contacto" element={<Contacto />} />
+                        <Route path="/favoritos" element={<Favoritos />} />
                     </Routes>
                 </main>
 
